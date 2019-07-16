@@ -35,7 +35,7 @@ To check code
 
 This command will install `golangci-lint` in `$GOPATH/bin/`
     
-### Running acceptance tests
+## Running acceptance tests
 
 To run acceptance tests (on running instance):
 
