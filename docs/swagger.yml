@@ -1,0 +1,234 @@
+openapi: 3.0.1
+info:
+  title: Payment System
+  description: 'Demo payment system'
+  contact:
+    email: leandr@cpan.org
+  version: 1.0.0
+externalDocs:
+  description: API documentation
+  url: https://github.com/khaliullov/payment-system/docs/api.md
+tags:
+  - name: account
+    description: Payment account
+  - name: payment
+    description: Payment transaction
+  - name: transfer
+    description: Money transfer
+paths:
+  /v1/accounts:
+    get:
+      tags:
+        - account
+      summary: Get list of existing accounts
+      operationId: listAccounts
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountList'
+  /v1/payments:
+    get:
+      tags:
+        - payment
+      summary: Get list of processed transfers
+      operationId: listTransactions
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionList'
+  /v1/transfer:
+    post:
+      tags:
+        - transfer
+      summary: Transfer money from account to account
+      operationId: makeTransfer
+      requestBody:
+        description: request with 'from', 'to', 'amount' fields
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        400:
+          description: bad request (wrong payer, payee, amount or currency)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        500:
+          description: internal server error, f.e. db error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+components:
+  schemas:
+    TransferRequest:
+      type: object
+      properties:
+        from:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: '^[\w]{1,40}$'
+        to:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: '^[\w]{1,40}$'
+        amount:
+          type: number
+          format: float
+          minimum: 0.01
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: '^[A-Z]{3}$'
+      required:
+        - from
+        - to
+        - amount
+    TransferResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+      required:
+        - success
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: '^[\w]{1,40}$'
+        balance:
+          type: number
+          format: float
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: '^[A-Z]{3}$'
+      required:
+        - id
+        - balance
+        - currency
+    AccountList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        error:
+          type: string
+      required:
+        - success
+        - accounts
+    TransactionIn:
+      type: object
+      properties:
+        direction:
+          type: string
+          enum:
+            - incoming
+        from_account:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: '^[\w]{1,40}$'
+        account:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: '^[\w]{1,40}$'
+        amount:
+          type: number
+          format: float
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: '^[A-Z]{3}$'
+        error:
+          type: string
+      required:
+        - direction
+        - from_account
+        - account
+        - amount
+        - currency
+        - error
+    TransactionOut:
+      type: object
+      properties:
+        direction:
+          type: string
+          enum:
+            - outgoing
+        account:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: '^[\w]{1,40}$'
+        to_account:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: '^[\w]{1,40}$'
+        amount:
+          type: number
+          format: float
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: '^[A-Z]{3}$'
+        error:
+          type: string
+      required:
+        - direction
+        - account
+        - to_account
+        - amount
+        - currency
+        - error
+    TransactionList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        payments:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TransactionIn'
+              - $ref: '#/components/schemas/TransactionOut'
+        error:
+          type: string
+      required:
+        - success
+        - payments
