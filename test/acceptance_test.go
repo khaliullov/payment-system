@@ -40,7 +40,7 @@ type apiFeature struct {
 
 	client service.Service
 
-	accounts []*repository.Account
+	accounts     []*repository.Account
 	transactions []interface{}
 }
 
@@ -67,23 +67,23 @@ func (af *apiFeature) init() {
 	var err error
 	af.db, err = sql.Open("postgres", DSN.String())
 	if err != nil {
-		level.Info(af.logger).Log("DB err", err.Error())
+		_ = level.Info(af.logger).Log("DB err", err.Error())
 		os.Exit(1)
 	}
 	af.httpHost = envString("HTTP_HOST", "localhost")
 	af.httpPort = envInt("HTTP_PORT", 8080)
-	af.client, _ = transport.NewHTTPClient(af.httpHost + ":" + strconv.Itoa(af.httpPort), af.logger)
+	af.client, _ = transport.NewHTTPClient(af.httpHost+":"+strconv.Itoa(af.httpPort), af.logger)
 }
 
 func (af *apiFeature) TruncateDB() {
 	_, err := af.db.Exec("TRUNCATE account RESTART IDENTITY CASCADE")
 	if err != nil {
-		level.Info(af.logger).Log("DB error", err.Error())
+		_ = level.Info(af.logger).Log("DB error", err.Error())
 		os.Exit(1)
 	}
 	_, err = af.db.Exec("TRUNCATE payment RESTART IDENTITY CASCADE")
 	if err != nil {
-		level.Info(af.logger).Log("DB error", err.Error())
+		_ = level.Info(af.logger).Log("DB error", err.Error())
 		os.Exit(1)
 	}
 }
@@ -104,14 +104,13 @@ func (af *apiFeature) theFollowingListExist(tableName string, recordList *gherki
 	}
 	query := "INSERT INTO " + tableName + "(" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")"
 	for i := 1; i < len(recordList.Rows); i++ {
-		var vals []interface{}
-		vals = make([]interface{}, 0)
+		vals := make([]interface{}, 0)
 		for n, cell := range recordList.Rows[i].Cells {
 			switch head[n].Value {
 			case "balance", "amount":
 				value, err := strconv.ParseFloat(cell.Value, 64)
 				if err != nil {
-					level.Info(af.logger).Log("table", tableName, "column", head[n].Value, "value", cell.Value, "err", err.Error())
+					_ = level.Info(af.logger).Log("table", tableName, "column", head[n].Value, "value", cell.Value, "err", err.Error())
 					os.Exit(1)
 				}
 				vals = append(vals, value)
@@ -121,7 +120,7 @@ func (af *apiFeature) theFollowingListExist(tableName string, recordList *gherki
 		}
 		_, err := af.db.Exec(query, vals...)
 		if err != nil {
-			level.Info(af.logger).Log("table", tableName, "values", vals, "err", err.Error())
+			_ = level.Info(af.logger).Log("table", tableName, "values", vals, "err", err.Error())
 			os.Exit(1)
 		}
 	}
@@ -147,66 +146,61 @@ func (af *apiFeature) iSendRequestTo(_, requestPath string) error {
 }
 
 func (af *apiFeature) outputJSONShouldHaveFieldWithFollowingData(fieldName string, recordList *gherkin.DataTable) error {
-	var fields []string
-	fields = make([]string, 0)
 	head := recordList.Rows[0].Cells
-	for _, cell := range head {
-		fields = append(fields, cell.Value)
-	}
-	if fieldName == "accounts" && len(recordList.Rows) - 1 != len(af.accounts) {
-		return fmt.Errorf("different length of accounts: %d != %d", len(recordList.Rows) - 1, len(af.accounts))
+	if fieldName == "accounts" && len(recordList.Rows)-1 != len(af.accounts) {
+		return fmt.Errorf("different length of accounts: %d != %d", len(recordList.Rows)-1, len(af.accounts))
 	}
 	for i := 1; i < len(recordList.Rows); i++ {
 		for n, cell := range recordList.Rows[i].Cells {
 			switch head[n].Value {
 			case "id":
-				if cell.Value != af.accounts[i - 1].UserID {
-					return fmt.Errorf("User Ids are different: %s != %s", cell.Value, af.accounts[i - 1].UserID)
+				if cell.Value != af.accounts[i-1].UserID {
+					return fmt.Errorf("User Ids are different: %s != %s", cell.Value, af.accounts[i-1].UserID)
 				}
 			case "balance", "amount":
 				value, err := strconv.ParseFloat(cell.Value, 64)
 				if err != nil {
-					level.Info(af.logger).Log("column", head[n].Value, "value", cell.Value, "err", err.Error())
+					_ = level.Info(af.logger).Log("column", head[n].Value, "value", cell.Value, "err", err.Error())
 					os.Exit(1)
 				}
-				if head[n].Value == "balance" && value != af.accounts[i - 1].Balance {
-					return fmt.Errorf("Balances are different: %f != %f", value, af.accounts[i - 1].Balance)
+				if head[n].Value == "balance" && value != af.accounts[i-1].Balance {
+					return fmt.Errorf("Balances are different: %f != %f", value, af.accounts[i-1].Balance)
 				}
-				if head[n].Value == "amount" && value != af.transactions[i - 1].(map[string]interface {})["amount"] {
-					return fmt.Errorf("Amounts are different: %f != %f", value, af.transactions[i - 1].(map[string]interface {})["amount"])
+				if head[n].Value == "amount" && value != af.transactions[i-1].(map[string]interface{})["amount"] {
+					return fmt.Errorf("Amounts are different: %f != %f", value, af.transactions[i-1].(map[string]interface{})["amount"])
 				}
 			case "direction":
-				if cell.Value != af.transactions[i - 1].(map[string]interface {})["direction"] {
-					return fmt.Errorf("Directions are different: %s != %s", cell.Value, af.transactions[i - 1].(map[string]interface {})["direction"])
+				if cell.Value != af.transactions[i-1].(map[string]interface{})["direction"] {
+					return fmt.Errorf("Directions are different: %s != %s", cell.Value, af.transactions[i-1].(map[string]interface{})["direction"])
 				}
 			case "error":
-				if cell.Value != af.transactions[i - 1].(map[string]interface {})["error"] {
-					return fmt.Errorf("Errors are different: %s != %s", cell.Value, af.transactions[i - 1].(map[string]interface {})["error"])
+				if cell.Value != af.transactions[i-1].(map[string]interface{})["error"] {
+					return fmt.Errorf("Errors are different: %s != %s", cell.Value, af.transactions[i-1].(map[string]interface{})["error"])
 				}
 			case "payee":
 				var value string
-				if af.transactions[i - 1].(map[string]interface {})["direction"] == repository.DirectionIncoming {
-					value = af.transactions[i - 1].(map[string]interface {})["account"].(string)
+				if af.transactions[i-1].(map[string]interface{})["direction"] == repository.DirectionIncoming {
+					value = af.transactions[i-1].(map[string]interface{})["account"].(string)
 				} else {
-					value = af.transactions[i - 1].(map[string]interface {})["to_account"].(string)
+					value = af.transactions[i-1].(map[string]interface{})["to_account"].(string)
 				}
 				if cell.Value != value {
 					return fmt.Errorf("Payees are different: %s != %s", cell.Value, value)
 				}
 			case "payer":
 				var value string
-				if af.transactions[i - 1].(map[string]interface {})["direction"] == repository.DirectionIncoming {
-					value = af.transactions[i - 1].(map[string]interface {})["from_account"].(string)
+				if af.transactions[i-1].(map[string]interface{})["direction"] == repository.DirectionIncoming {
+					value = af.transactions[i-1].(map[string]interface{})["from_account"].(string)
 				} else {
-					value = af.transactions[i - 1].(map[string]interface {})["account"].(string)
+					value = af.transactions[i-1].(map[string]interface{})["account"].(string)
 				}
 				if cell.Value != value {
 					return fmt.Errorf("Payers are different: %s != %s", cell.Value, value)
 				}
 			case "currency":
 				if fieldName == "accounts" {
-					if cell.Value != af.accounts[i - 1].Currency {
-						return fmt.Errorf("Currencies are different: %s != %s", cell.Value, af.accounts[i - 1].Currency)
+					if cell.Value != af.accounts[i-1].Currency {
+						return fmt.Errorf("Currencies are different: %s != %s", cell.Value, af.accounts[i-1].Currency)
 					}
 				}
 			}
