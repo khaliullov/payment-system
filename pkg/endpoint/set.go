@@ -86,13 +86,13 @@ func (s Set) TransactionHistory(ctx context.Context) ([]interface{}, error) {
 
 // Transfer implements the service interface, so Set may be used as a service.
 // This is primarily useful in the context of a client library.
-func (s Set) Transfer(ctx context.Context) (bool, error) {
-	resp, err := s.TransferEndpoint(ctx, TransferRequest{})
+func (s Set) Transfer(ctx context.Context, from, to string, amount float64, currency string) (*repository.Transaction, error) {
+	resp, err := s.TransferEndpoint(ctx, TransferRequest{From: from, To: to, Amount: amount, Currency: currency})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	response := resp.(TransferResponse)
-	return response.Success, response.Error
+	return nil, response.Error
 }
 
 // MakeHealthCheckEndpoint constructs a HealthCheck endpoint wrapping the service.

@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  digest = "1:8eacd45a4fb9c351d20c6050ae91783a844f171e65470fca0380c30a5eabb726"
+  name = "github.com/DATA-DOG/godog"
+  packages = [
+    ".",
+    "colors",
+    "gherkin",
+  ]
+  pruneopts = "UT"
+  revision = "8e7bc15e741c4f6c93c0fc2e797ed869cbc1b8f7"
+  version = "v0.7.13"
+
+[[projects]]
   digest = "1:469ec9d1faf66ce721d8e8e53476e2cbea6f475eab06ab8505732ad5cd37e832"
   name = "github.com/go-kit/kit"
   packages = [
@@ -71,6 +83,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/DATA-DOG/godog",
+    "github.com/DATA-DOG/godog/gherkin",
     "github.com/go-kit/kit/endpoint",
     "github.com/go-kit/kit/log",
     "github.com/go-kit/kit/log/level",

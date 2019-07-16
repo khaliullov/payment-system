@@ -54,14 +54,14 @@ func main() {
 	{
 		var err error
 		// Connect to the "payment-system" database
-		URL := &url.URL{
+		DSN := &url.URL{
 			Scheme:   "postgresql",
 			RawQuery: "sslmode=disable",
 			Host:     *dbHost + ":" + strconv.Itoa(*dbPort),
 			Path:     *dbName,
 			User:     url.UserPassword(*dbUser, *dbPassword),
 		}
-		db, err = sql.Open("postgres", URL.String())
+		db, err = sql.Open("postgres", DSN.String())
 		if err != nil {
 			_ = level.Error(logger).Log("db", err)
 			os.Exit(1)

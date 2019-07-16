@@ -2,11 +2,13 @@ GOPATH 		:= $(shell go env GOPATH)
 GODEP  		:= $(GOPATH)/bin/dep
 GOCILINT	:= $(GOPATH)/bin/golangci-lint
 BINARY_NAME := payment-system
-DOCKER_NET	:= payment-system_ps_net
+API_HOST    := localhost
 
 -include .env
 
-.PHONY: help run up build lint test install
+.PHONY: all help run up build lint test install at
+
+all: build
 
 help:           ## Show this help
 help:
@@ -32,6 +34,14 @@ lint: vendor $(GOCILINT)
 test:           ## Run go test -cover
 test: vendor
 	go test -cover ./cmd/... ./pkg/...
+
+at:				## Run acceptance test (purges all data!)
+at: vendor
+	cd test && \
+		HTTP_HOST=$(API_HOST) HTTP_PORT=$(HTTP_PORT) DB_HOST=$(POSTGRES_HOST) \
+		DB_PORT=$(POSTGRES_PORT) DB_NAME=$(POSTGRES_DB) DB_USER=$(POSTGRES_USER) \
+		DB_PASSWORD=$(POSTGRES_PASSWORD) \
+		go test -v -tags=at
 
 install:        ## Install binary
 	cp $(BINARY_NAME) /usr/bin/
