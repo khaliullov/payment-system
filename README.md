@@ -42,3 +42,8 @@ To run acceptance tests (on running instance):
     make HTTP_HOST=127.0.0.1 HTTP_PORT=8080 at
     
 **WARNING**: this command will reset DB (purge all data)
+
+Postgres config is loaded from `.env` file, but it is
+possible to override it via additional args to `make`:
+
+    make HTTP_POST=127.0.0.1 POSTGRES_HOST=127.0.0.1 at

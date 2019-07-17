@@ -171,6 +171,10 @@ func (af *apiFeature) iSendRequestTo(_, requestPath string) error {
 			}
 		}
 		_, err = af.client.Transfer(context.Background(), from, to, amount, currency)
+		if err == nil {
+			af.lastError = nil
+			return nil
+		}
 		switch err.Error() {
 		case repository.ErrRequiredArgumentMissing.Error(), repository.ErrPayerNotFound.Error():
 			af.lastError = err
@@ -282,6 +286,63 @@ func (af *apiFeature) iShouldGetError(errString string) error {
 	return fmt.Errorf("Error should be %s, but got %v", errString, af.lastError)
 }
 
+func (af *apiFeature) andTableShouldContainFollowingData(tableName string, recordList *gherkin.DataTable) error {
+	fields := make([]string, 0)
+	head := recordList.Rows[0].Cells
+	for _, cell := range head {
+		fields = append(fields, cell.Value)
+	}
+	query := "SELECT " + strings.Join(fields, ", ") + " FROM " + tableName
+	rows, err := af.db.Query(query)
+	if err != nil {
+		_ = level.Error(af.logger).Log("table", tableName, "err", err)
+		os.Exit(1)
+	}
+	defer rows.Close()
+
+	rowsCount := 0
+	colsCount := len(fields)
+	for rows.Next() {
+		cells := make([]interface{}, colsCount)
+		cellPtrs := make([]interface{}, colsCount)
+		for i := range fields {
+			cellPtrs[i] = &cells[i]
+		}
+		err := rows.Scan(cellPtrs...)
+		if err != nil {
+			return fmt.Errorf("failed to parse row in %s: %v", tableName, err)
+		}
+		found := false
+		for i := 1; i < len(recordList.Rows); i++ {
+			matched := 0
+			for n, cell := range recordList.Rows[i].Cells {
+				switch cells[n].(type) {
+				case []uint8:
+					cells[n] = string([]byte(cells[n].([]uint8)[:]))
+				}
+				if cells[n].(string) == cell.Value {
+					matched++
+				} else {
+					break
+				}
+			}
+			if matched == colsCount {
+				found = true
+				break
+			}
+		}
+		if found != true {
+			return fmt.Errorf("Record %v was not found in table: %s", cells, tableName)
+		}
+		rowsCount++
+	}
+	if len(recordList.Rows)-1 != rowsCount {
+		return fmt.Errorf("different length of %s: %d != %d", tableName, len(recordList.Rows)-1, rowsCount)
+	}
+
+	return nil
+}
+
 // FeatureContext - init and route steps
 func FeatureContext(s *godog.Suite) {
 	api := &apiFeature{}
@@ -291,6 +352,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^output json should have "([^"]*)" field with following data:$`, api.outputJSONShouldHaveFieldWithFollowingData)
 	s.Step(`^request arguments are:$`, api.requestArgumentsAre)
 	s.Step(`^I should get error "([^"]*)"$`, api.iShouldGetError)
+	s.Step(`^and table "([^"]*)" should contain following data:$`, api.andTableShouldContainFollowingData)
 	s.BeforeScenario(func(interface{}) {
 		api.TruncateDB()
 		for k := range api.Args {

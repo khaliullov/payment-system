@@ -201,7 +201,11 @@ func (tr *TransferResponse) UnmarshalJSON(data []byte) error {
 		case "success":
 			tr.Success = v.(bool)
 		case "error":
-			tr.Error = errors.New(v.(string))
+			if v.(string) != "" {
+				tr.Error = errors.New(v.(string))
+			} else {
+				tr.Error = nil
+			}
 		}
 	}
 	return nil

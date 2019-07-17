@@ -28,6 +28,12 @@ var (
 	// QueryLock is a query for locking account for update
 	QueryLock = "SELECT user_id, balance, currency FROM account WHERE user_id = $1 FOR NO KEY UPDATE"
 
+	// QueryAccount is a query for fetching all accounts
+	QueryAccount = "SELECT user_id, balance, currency FROM account"
+
+	// QueryTransaction is a query for fetching all transactions
+	QueryTransaction = "SELECT txn_id, direction, date, payer, payee, amount, currency, error FROM payment"
+
 	// QueryUpdate is a query for updating accounts balance
 	QueryUpdate = "UPDATE account SET balance = $1 WHERE user_id = $2"
 
@@ -81,7 +87,7 @@ type repository struct {
 
 // GetAccounts returns all Accounts
 func (r repository) GetAccounts(ctx context.Context) ([]*Account, error) {
-	rows, err := r.db.Query("SELECT user_id, balance, currency FROM account")
+	rows, err := r.db.Query(QueryAccount)
 	if err != nil {
 		_ = level.Error(r.logger).Log("method", "GetAccounts", "err", err)
 		return nil, err
@@ -107,7 +113,7 @@ func (r repository) GetAccounts(ctx context.Context) ([]*Account, error) {
 
 // GetTransactions returns all Transaction history.
 func (r repository) GetTransactions(ctx context.Context) ([]interface{}, error) {
-	rows, err := r.db.Query("SELECT txn_id, direction, date, payer, payee, amount, currency, error FROM payment")
+	rows, err := r.db.Query(QueryTransaction)
 	if err != nil {
 		_ = level.Error(r.logger).Log("method", "GetTransactions", "err", err)
 		return nil, err

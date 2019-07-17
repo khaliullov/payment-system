@@ -4,7 +4,7 @@ info:
   description: 'Demo payment system'
   contact:
     email: leandr@cpan.org
-  version: 1.0.0
+  version: 1.0.1
 externalDocs:
   description: API documentation
   url: https://github.com/khaliullov/payment-system/docs/api.md
