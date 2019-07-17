@@ -42,6 +42,9 @@ type apiFeature struct {
 
 	accounts     []*repository.Account
 	transactions []interface{}
+
+	Args      map[string]string
+	lastError error
 }
 
 func (af *apiFeature) init() {
@@ -73,6 +76,7 @@ func (af *apiFeature) init() {
 	af.httpHost = envString("HTTP_HOST", "localhost")
 	af.httpPort = envInt("HTTP_PORT", 8080)
 	af.client, _ = transport.NewHTTPClient(af.httpHost+":"+strconv.Itoa(af.httpPort), af.logger)
+	af.Args = make(map[string]string)
 }
 
 func (af *apiFeature) TruncateDB() {
@@ -141,6 +145,46 @@ func (af *apiFeature) iSendRequestTo(_, requestPath string) error {
 		if err != nil {
 			return err
 		}
+	case transport.TransferPath:
+		var err error
+		var (
+			from     = ""
+			to       = ""
+			currency = ""
+			amount   = 0.00
+		)
+		for k, v := range af.Args {
+			switch k {
+			case "amount":
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					_ = level.Info(af.logger).Log("key", k, "value", v, "err", err.Error())
+					os.Exit(1)
+				}
+				amount = value
+			case "from":
+				from = v
+			case "to":
+				to = v
+			case "currency":
+				currency = v
+			}
+		}
+		_, err = af.client.Transfer(context.Background(), from, to, amount, currency)
+		switch err.Error() {
+		case repository.ErrRequiredArgumentMissing.Error(), repository.ErrPayerNotFound.Error():
+			af.lastError = err
+		case repository.ErrPayeeNotFound.Error(), repository.ErrDifferentCurrency.Error():
+			af.lastError = err
+		case repository.ErrSelfTransfer.Error(), repository.ErrInsufficientFunds.Error():
+			af.lastError = err
+		case repository.ErrWrongCurrency.Error(), repository.ErrTransactionFailed.Error():
+			af.lastError = err
+		default:
+			return err
+		}
+	default:
+		return godog.ErrPending
 	}
 	return nil
 }
@@ -209,6 +253,35 @@ func (af *apiFeature) outputJSONShouldHaveFieldWithFollowingData(fieldName strin
 	return nil
 }
 
+func (af *apiFeature) requestArgumentsAre(requstsArgs *gherkin.DataTable) error {
+	head := requstsArgs.Rows[0].Cells
+	for i := 1; i < len(requstsArgs.Rows); i++ {
+		var key, value string
+		for n, cell := range requstsArgs.Rows[i].Cells {
+			switch head[n].Value {
+			case "key":
+				key = cell.Value
+			case "value":
+				value = cell.Value
+			}
+		}
+		if key != "" {
+			af.Args[key] = value
+		}
+	}
+	return nil
+}
+
+func (af *apiFeature) iShouldGetError(errString string) error {
+	if errString == "" && af.lastError == nil {
+		return nil
+	}
+	if errString == af.lastError.Error() {
+		return nil
+	}
+	return fmt.Errorf("Error should be %s, but got %v", errString, af.lastError)
+}
+
 // FeatureContext - init and route steps
 func FeatureContext(s *godog.Suite) {
 	api := &apiFeature{}
@@ -216,8 +289,13 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the following "([^"]*)" list exist:$`, api.theFollowingListExist)
 	s.Step(`^I send "([^"]*)" request to "([^"]*)"$`, api.iSendRequestTo)
 	s.Step(`^output json should have "([^"]*)" field with following data:$`, api.outputJSONShouldHaveFieldWithFollowingData)
+	s.Step(`^request arguments are:$`, api.requestArgumentsAre)
+	s.Step(`^I should get error "([^"]*)"$`, api.iShouldGetError)
 	s.BeforeScenario(func(interface{}) {
 		api.TruncateDB()
+		for k := range api.Args {
+			delete(api.Args, k)
+		}
 	})
 	s.AfterSuite(api.deInit)
 }

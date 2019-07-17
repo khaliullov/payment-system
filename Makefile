@@ -2,7 +2,7 @@ GOPATH 		:= $(shell go env GOPATH)
 GODEP  		:= $(GOPATH)/bin/dep
 GOCILINT	:= $(GOPATH)/bin/golangci-lint
 BINARY_NAME := payment-system
-API_HOST    := localhost
+HTTP_HOST   := localhost
 
 -include .env
 
@@ -38,7 +38,7 @@ test: vendor
 at:				## Run acceptance test (purges all data!)
 at: vendor
 	cd test && \
-		HTTP_HOST=$(API_HOST) HTTP_PORT=$(HTTP_PORT) DB_HOST=$(POSTGRES_HOST) \
+		HTTP_HOST=$(HTTP_HOST) HTTP_PORT=$(HTTP_PORT) DB_HOST=$(POSTGRES_HOST) \
 		DB_PORT=$(POSTGRES_PORT) DB_NAME=$(POSTGRES_DB) DB_USER=$(POSTGRES_USER) \
 		DB_PASSWORD=$(POSTGRES_PASSWORD) \
 		go test -v -tags=at

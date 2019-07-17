@@ -7,7 +7,7 @@ Feature: accounts
       | alice456 | 0.01    | USD      |
       | bob123   | 100.00  | USD      |
     When I send "GET" request to "/v1/accounts"
-    And output json should have "accounts" field with following data:
+    Then output json should have "accounts" field with following data:
       | id       | balance | currency |
       | alice456 | 0.01    | USD      |
       | bob123   | 100.00  | USD      |
@@ -16,5 +16,5 @@ Feature: accounts
     Given the following "account" list exist:
       | user_id  | balance | currency |
     When I send "GET" request to "/v1/accounts"
-    And output json should have "accounts" field with following data:
+    Then output json should have "accounts" field with following data:
       | id       | balance | currency |

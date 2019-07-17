@@ -118,7 +118,7 @@ func NewHTTPClient(instance string, logger log.Logger) (service.Service, error) 
 	{
 		transferEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, TransactionPath),
+			copyURL(u, TransferPath),
 			encodeHTTPGenericRequest,
 			decodeHTTPTransferResponse,
 			options...,

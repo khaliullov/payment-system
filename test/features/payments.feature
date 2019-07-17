@@ -14,7 +14,7 @@ Feature: payments
       | incoming  | bob123   | alice456 | 100.00 | USD      |                    |
       | outgoing  | alice456 | bob123   | 100.00 | USD      | Insufficient funds |
     When I send "GET" request to "/v1/payments"
-    And output json should have "payments" field with following data:
+    Then output json should have "payments" field with following data:
       | direction | payer    | payee    | amount | error              |
       | outgoing  | alice456 | bob123   | 100.00 |                    |
       | incoming  | alice456 | bob123   | 100.00 |                    |

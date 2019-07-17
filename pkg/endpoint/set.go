@@ -2,6 +2,8 @@ package endpoint
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 
 	ep "github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -189,22 +191,38 @@ type TransferResponse struct {
 	Error   error `json:"error,omitempty"`
 }
 
-// Failed implements endpoint.Failer.
-func (r HealthCheckResponse) Failed() error {
-	return r.Error
+func (tr *TransferResponse) UnmarshalJSON(data []byte) error {
+	var dict map[string]interface{}
+	if err := json.Unmarshal(data, &dict); err != nil {
+		return err
+	}
+	for k, v := range dict {
+		switch k {
+		case "success":
+			tr.Success = v.(bool)
+		case "error":
+			tr.Error = errors.New(v.(string))
+		}
+	}
+	return nil
 }
 
 // Failed implements endpoint.Failer.
-func (r AccountResponse) Failed() error {
-	return r.Error
+func (hcr HealthCheckResponse) Failed() error {
+	return hcr.Error
 }
 
 // Failed implements endpoint.Failer.
-func (r TransactionHistoryResponse) Failed() error {
-	return r.Error
+func (ar AccountResponse) Failed() error {
+	return ar.Error
 }
 
 // Failed implements endpoint.Failer.
-func (r TransferResponse) Failed() error {
-	return r.Error
+func (thr TransactionHistoryResponse) Failed() error {
+	return thr.Error
+}
+
+// Failed implements endpoint.Failer.
+func (tr TransferResponse) Failed() error {
+	return tr.Error
 }

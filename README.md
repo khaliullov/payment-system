@@ -39,6 +39,6 @@ This command will install `golangci-lint` in `$GOPATH/bin/`
 
 To run acceptance tests (on running instance):
 
-    make API_HOST=127.0.0.1 HTTP_PORT=8080 at
+    make HTTP_HOST=127.0.0.1 HTTP_PORT=8080 at
     
 **WARNING**: this command will reset DB (purge all data)
