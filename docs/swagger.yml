@@ -167,11 +167,6 @@ components:
           type: number
           format: float
           minimum: 0
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-          pattern: '^[A-Z]{3}$'
         error:
           type: string
       required:
@@ -179,7 +174,6 @@ components:
         - from_account
         - account
         - amount
-        - currency
         - error
     TransactionOut:
       type: object
@@ -202,11 +196,6 @@ components:
           type: number
           format: float
           minimum: 0
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-          pattern: '^[A-Z]{3}$'
         error:
           type: string
       required:
@@ -214,7 +203,6 @@ components:
         - account
         - to_account
         - amount
-        - currency
         - error
     TransactionList:
       type: object
