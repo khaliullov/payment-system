@@ -149,11 +149,11 @@ func errorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 
 func err2code(err error) int {
 	switch err {
-	case repository.ErrInsufficientFunds, repository.ErrPayerNotFound, repository.ErrPayeeNotFound:
+	case service.ErrInsufficientFunds, repository.ErrPayerNotFound, repository.ErrPayeeNotFound:
 		return http.StatusBadRequest
-	case repository.ErrSelfTransfer, repository.ErrRequiredArgumentMissing, repository.ErrWrongCurrency:
+	case service.ErrSelfTransfer, service.ErrRequiredArgumentMissing, service.ErrWrongCurrency:
 		return http.StatusBadRequest
-	case repository.ErrDifferentCurrency:
+	case service.ErrDifferentCurrency:
 		return http.StatusBadRequest
 	}
 	return http.StatusInternalServerError

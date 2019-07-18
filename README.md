@@ -46,4 +46,4 @@ To run acceptance tests (on running instance):
 Postgres config is loaded from `.env` file, but it is
 possible to override it via additional args to `make`:
 
-    make HTTP_POST=127.0.0.1 POSTGRES_HOST=127.0.0.1 at
+    make HTTP_HOST=127.0.0.1 POSTGRES_HOST=127.0.0.1 at

@@ -176,13 +176,13 @@ func (af *apiFeature) iSendRequestTo(_, requestPath string) error {
 			return nil
 		}
 		switch err.Error() {
-		case repository.ErrRequiredArgumentMissing.Error(), repository.ErrPayerNotFound.Error():
+		case service.ErrRequiredArgumentMissing.Error(), repository.ErrPayerNotFound.Error():
 			af.lastError = err
-		case repository.ErrPayeeNotFound.Error(), repository.ErrDifferentCurrency.Error():
+		case repository.ErrPayeeNotFound.Error(), service.ErrDifferentCurrency.Error():
 			af.lastError = err
-		case repository.ErrSelfTransfer.Error(), repository.ErrInsufficientFunds.Error():
+		case service.ErrSelfTransfer.Error(), service.ErrInsufficientFunds.Error():
 			af.lastError = err
-		case repository.ErrWrongCurrency.Error(), repository.ErrTransactionFailed.Error():
+		case service.ErrWrongCurrency.Error(), service.ErrTransactionFailed.Error():
 			af.lastError = err
 		default:
 			return err

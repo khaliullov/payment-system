@@ -125,9 +125,15 @@ Example request:
       "currency": "USD"
     }
 
-Example response:
+Example successful response:
 
     {
       "success": true
     }
 
+Example unsuccessful response:
+
+    {
+      "success": false,
+      "error": "Insufficient funds"
+    }
