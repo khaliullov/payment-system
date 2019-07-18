@@ -38,7 +38,7 @@ services:
     build:
       context: .
       dockerfile: docker/payment-system/Dockerfile
-    image: payment-system:1.0.1
+    image: payment-system:1.0.2
     restart: always
     container_name: ps-instance1
     networks:
@@ -67,7 +67,7 @@ services:
     build:
       context: .
       dockerfile: docker/payment-system/Dockerfile
-    image: payment-system:1.0.1
+    image: payment-system:1.0.2
     restart: always
     container_name: ps-instance2
     networks:
