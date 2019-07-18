@@ -103,6 +103,10 @@ func (ps paymentService) Transfer(ctx context.Context, from, to string, amount f
 		}
 	}()
 
+	// to avoid deadlock: lock rows in alphabet order
+	// https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
+	// with NO KEY UPDATE flag
+	// https://habr.com/ru/company/wargaming/blog/323354/
 	var toAccount, fromAccount *repository.Account
 	if from > to {
 		toAccount, fromAccount, err = ps.repository.GetAndLockTwoAccounts(txn, repository.LockToFrom, to, from)
